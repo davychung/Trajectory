@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Davy Chung | Trajectory</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<nav>
+    <a href="https://davychung.github.io/html-basics/">
+        Portfolio
+    </a>
+
+    <a href="https://davychung.github.io/html-basics/#about">
+        About
+    </a>
+
+    <a href="https://davychung.github.io/html-basics/#footer">
+        Contact
+    </a>
+</nav>
+
+    <header>
+        <div class="projectpage-header">
+            <h1>Trajectory</h1>
+            <p><strong>Status:</strong> In Progress</p>
+        </div>
+    </header>
+
+    <main>
+
+        <section class="projectpage-section">
+            <h2>Log Activity</h2>
+
+            <form id="activity-form">
+                <label for="activity-type">Activity Type</label>
+
+                <select id="activity-type" required>
+                    <option value="learning">Learning</option>
+                    <option value="leetcode">LeetCode</option>
+                    <option value="project-work">Project Work</option>
+                </select>
+
+                <label for="activity-amount">Hours</label>
+                <input
+                    type="number"
+                    id="activity-amount"
+                    min="0.25"
+                    max="24"
+                    step="0.25"
+                    placeholder="2"
+                    required
+                >
+
+                <label for="activity-description">Description</label>
+                <input
+                    type="text"
+                    id="activity-description"
+                    placeholder="Learned JavaScript DOM basics"
+                    required
+                >
+
+                <button type="submit">Add Activity</button>
+                <p id="form-message" role="status"></p>
+
+                <div id="xp-result">
+                <p>Total XP: <span id="total-xp">0</span></p>
+                </div>
+            </form>
+
+            <p>Level: <span id="level">1</span></p>
+
+            <div class="level-progress">
+                <p id="next-level-text">0 XP to next level</p>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="level-progress-fill"></div>
+                </div>
+            </div>
+            
+            <div class="distribution-header">
+                <h3>XP Distribution</h3>
+
+                <p>
+                    Your share of total XP across each growth dimension.
+                    Percentages change as your activity mix changes.
+                </p>
+            </div>
+
+            <div class="dimension-row">
+                <div class="dimension-label">
+                    <span>Building</span>
+                    <span id="building-xp">0 XP</span>
+                </div>
+
+                <div class="dimension-bar">
+                    <div class="dimension-fill" id="building-fill"></div>
+                </div>
+            </div>
+
+            <div class="dimension-row">
+                <div class="dimension-label">
+                    <span>Problem Solving</span>
+                    <span id="problem-solving-xp">0 XP</span>
+                </div>
+
+                <div class="dimension-bar">
+                    <div class="dimension-fill" id="problem-solving-fill"></div>
+                </div>
+            </div>
+
+            <div class="dimension-row">
+                <div class="dimension-label">
+                    <span>Learning</span>
+                    <span id="learning-xp">0 XP</span>
+                </div>
+
+                <div class="dimension-bar">
+                    <div class="dimension-fill" id="learning-fill"></div>
+                </div>
+            </div>
+            
+            <div class="dimension-row">
+                <div class="dimension-label">
+                    <span>Career</span>
+                    <span id="career-xp">0 XP</span>
+                </div>
+
+                <div class="dimension-bar">
+                    <div class="dimension-fill" id="career-fill"></div>
+                </div>
+            </div>
+            
+            <div class="dimension-row">
+                <div class="dimension-label">
+                    <span>Creativity</span>
+                    <span id="creativity-xp">0 XP</span>
+                </div>
+
+                <div class="dimension-bar">
+                    <div class="dimension-fill" id="creativity-fill"></div>
+                </div>
+            </div>
+
+
+            <div class="activity-history">
+                <h3>Activity History</h3>
+                <ul id="activity-list"></ul>
+            </div>
+
+            <div class="data-controls">
+                <button type="button" id="export-data-button">
+                    Export Data
+                </button>
+
+                <button type="button" id="reset-data-button">
+                    Reset Data
+                </button>
+            </div>
+
+        </section>
+
+        <div class="container">
+
+            <section class="projectpage-section">
+                <h2>Screenshots & Demo</h2>
+                <!-- screenshots will go here -->
+
+                <div class="project-preview">
+                    <p>Project development has not yet begun.</p>
+                    <p>
+                        Screenshots and a live demonstration will be added as
+                        Trajectory progresses through the implementation.
+                    </p>
+                </div>
+            </section>
+
+            <section class="projectpage-section">
+                <h2>Overview</h2>
+
+                <p>
+                    Trajectory is a career development tracking system designed to make professional
+                    growth visible and measurable. It tracks real-world accomplishments, projects,
+                    skills and milestones as progression, using game-inspired systems such as
+                    experience points, levels and achievements.
+                </p>
+
+                <p>
+                    The goal is not to decide what career someone should pursue, but to make the
+                    progress they are already making easier to understand. By connecting that
+                    progression to tangible evidence of work, Trajectory can eventually provide a
+                    clearer picture of how someone's skills and experience have developed over time.
+                </p>
+
+            </section>
+
+            <section class="projectpage-section">
+                <h2>Why</h2>
+
+                <p>
+                    As I entered my final year of university, I found myself asking what the last three years
+                    of studying had actually added up to. I had courses, projects and experiences, but no
+                    clear idea of how they were moving me towards becoming a professional software engineer.
+                </p>
+
+                <p>
+                    Trajectory started as an attempt to solve that problem for myself; a system that could track
+                    my work and accomplishments, show how they contribute to my growth and give me an actual sense
+                    of progress. Instead of reducing myself to just another resume or a list of credentials,
+                    I wanted to build something that could show the story and growth of the person behind the work.
+                </p>
+
+            </section>
+
+            <section class="projectpage-section">
+                <h2>Technologies</h2>
+
+                <h3>Current</h3>
+                <div class="tech-stack">
+                    <span class="chip">Concept / Planning Phase</span>
+                </div>
+
+                <h3>Planned</h3>
+                <div class="tech-stack">
+                    <span class="chip">React</span>
+                    <span class="chip">JavaScript</span>
+                    <span class="chip">Project Nexus</span>
+                </div>
+
+            </section>
+
+            <section class="projectpage-section">
+                <h2>Development Process</h2>
+                <h3>Stage 1: Problem Identification</h3>
+                <p>
+                    Identified the difficulty of understanding how university courses,
+                    projects and experiences were contributing toward professional
+                    development.
+                </p>
+
+                <h3>Stage 2: Product Conceptualization</h3>
+                <p>
+                    Designed Trajectory as a system for making that
+                    progression visible through XP, achievements,
+                    milestones and project history.
+                </p>
+
+                <h3>Stage 3: System Design and Architecture <em>In Progress</em></h3>
+                <p>
+                    Defining how Trajectory will represent projects, achievements,
+                    experience and professional growth, while planning its integration
+                    with Project Nexus.
+                </p>
+
+                <h3>Stage 4: Implementation <em>Planned</em></h3>
+                <p>
+                    Development of the Trajectory application and its core progression
+                    system.
+                </p>
+
+                <h3>Stage 5: Integration & Iteration <em>Planned</em></h3>
+                <p>
+                    Connecting Trajectory with Project Nexus and refining the system
+                    through continued use and development.
+                </p>
+
+            </section>
+
+            <section class="projectpage-section">
+                <h2>Links</h2>
+                <a href="#">Github</a>
+            </section>
+
+        </div>
+    </main>
+    <script src="trajectory.js"></script>
+</body>
