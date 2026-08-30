@@ -9,24 +9,25 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<nav>
-    <a href="https://davychung.github.io/html-basics/">
-        Portfolio
-    </a>
+<body>
+    <nav>
+        <a href="https://davychung.github.io/html-basics/">
+            Portfolio
+        </a>
 
-    <a href="https://davychung.github.io/html-basics/#about">
-        About
-    </a>
+        <a href="https://davychung.github.io/html-basics/#about">
+            About
+        </a>
 
-    <a href="https://davychung.github.io/html-basics/#footer">
-        Contact
-    </a>
-</nav>
+        <a href="https://davychung.github.io/html-basics/#footer">
+            Contact
+        </a>
+    </nav>
 
     <header>
         <div class="projectpage-header">
             <h1>Trajectory</h1>
-            <p><strong>Status:</strong> In Progress</p>
+            <p><strong>Status:</strong> Pilot Build</p>
         </div>
     </header>
 
@@ -35,39 +36,63 @@
         <section class="projectpage-section">
             <h2>Log Activity</h2>
 
+            <aside class="pilot-note" aria-labelledby="pilot-note-title">
+                <p class="pilot-label">Pilot Build</p>
+
+                <h3 id="pilot-note-title">Log one real activity</h3>
+
+                <p>
+                    Choose what you worked on, enter the time spent and briefly
+                    describe the work. Trajectory will translate it into XP and
+                    growth dimensions using an experimental ruleset.
+                </p>
+
+                <p class="pilot-storage-note">
+                    Your activities are saved only in this browser. Export your
+                    data before clearing browser storage or moving to another device.
+                </p>
+            </aside>
+
             <form id="activity-form">
-                <label for="activity-type">Activity Type</label>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="activity-type">Activity Type</label>
+                        <select id="activity-type" required>
+                            <option value="learning">Learning</option>
+                            <option value="leetcode">LeetCode</option>
+                            <option value="project-work">Project Work</option>
+                        </select>
+                    </div>
 
-                <select id="activity-type" required>
-                    <option value="learning">Learning</option>
-                    <option value="leetcode">LeetCode</option>
-                    <option value="project-work">Project Work</option>
-                </select>
+                    <div class="form-field">
+                        <label for="activity-amount">Hours</label>
+                        <input
+                            type="number"
+                            id="activity-amount"
+                            min="0.25"
+                            max="24"
+                            step="0.25"
+                            placeholder="2"
+                            required
+                        >
+                    </div>
 
-                <label for="activity-amount">Hours</label>
-                <input
-                    type="number"
-                    id="activity-amount"
-                    min="0.25"
-                    max="24"
-                    step="0.25"
-                    placeholder="2"
-                    required
-                >
-
-                <label for="activity-description">Description</label>
-                <input
-                    type="text"
-                    id="activity-description"
-                    placeholder="Learned JavaScript DOM basics"
-                    required
-                >
+                    <div class="form-field">
+                        <label for="activity-description">Description</label>
+                        <input
+                            type="text"
+                            id="activity-description"
+                            placeholder="Learned JavaScript DOM basics"
+                            required
+                        >
+                    </div>
+                </div>
 
                 <button type="submit">Add Activity</button>
                 <p id="form-message" role="status"></p>
 
                 <div id="xp-result">
-                <p>Total XP: <span id="total-xp">0</span></p>
+                    <p>Total XP: <span id="total-xp">0</span></p>
                 </div>
             </form>
 
@@ -166,8 +191,8 @@
         <div class="container">
 
             <section class="projectpage-section">
-                <h2>Screenshots & Demo</h2>
-                <!-- screenshots will go here -->
+                <!-- <h2>Screenshots & Demo</h2>
+                    screenshots will go here
 
                 <div class="project-preview">
                     <p>Project development has not yet begun.</p>
@@ -175,7 +200,7 @@
                         Screenshots and a live demonstration will be added as
                         Trajectory progresses through the implementation.
                     </p>
-                </div>
+                </div> -->
             </section>
 
             <section class="projectpage-section">
@@ -218,53 +243,45 @@
             <section class="projectpage-section">
                 <h2>Technologies</h2>
 
-                <h3>Current</h3>
                 <div class="tech-stack">
-                    <span class="chip">Concept / Planning Phase</span>
-                </div>
-
-                <h3>Planned</h3>
-                <div class="tech-stack">
-                    <span class="chip">React</span>
+                    <span class="chip">HTML</span>
+                    <span class="chip">CSS</span>
                     <span class="chip">JavaScript</span>
-                    <span class="chip">Project Nexus</span>
+                    <span class="chip">Local Storage</span>
+                    <span class="chip">JSON Export</span>
                 </div>
-
             </section>
 
             <section class="projectpage-section">
                 <h2>Development Process</h2>
-                <h3>Stage 1: Problem Identification</h3>
+                <h3>Stage 1: Problem Identification — Complete</h3>
                 <p>
-                    Identified the difficulty of understanding how university courses,
-                    projects and experiences were contributing toward professional
-                    development.
+                    Identified the difficulty of understanding how courses, projects
+                    and professional experiences accumulate into meaningful growth.
                 </p>
 
-                <h3>Stage 2: Product Conceptualization</h3>
+                <h3>Stage 2: Deterministic Progression Core — Complete</h3>
                 <p>
-                    Designed Trajectory as a system for making that
-                    progression visible through XP, achievements,
-                    milestones and project history.
+                    Built a structured activity system that derives XP, levels and
+                    growth-dimension distributions from explicit scoring rules.
                 </p>
 
-                <h3>Stage 3: System Design and Architecture <em>In Progress</em></h3>
+                <h3>Stage 3: Data Architecture — Complete</h3>
                 <p>
-                    Defining how Trajectory will represent projects, achievements,
-                    experience and professional growth, while planning its integration
-                    with Project Nexus.
+                    Separated persisted activity facts from derived progression state,
+                    with validation, recovery safeguards, ruleset metadata and export.
                 </p>
 
-                <h3>Stage 4: Implementation <em>Planned</em></h3>
+                <h3>Stage 4: Pilot Validation — In Progress</h3>
                 <p>
-                    Development of the Trajectory application and its core progression
-                    system.
+                    Testing the system with real activity data to evaluate usability,
+                    scoring balance and whether the resulting progression is meaningful.
                 </p>
 
-                <h3>Stage 5: Integration & Iteration <em>Planned</em></h3>
+                <h3>Stage 5: Natural-Language Interpretation — Planned</h3>
                 <p>
-                    Connecting Trajectory with Project Nexus and refining the system
-                    through continued use and development.
+                    Explore a small AI-assisted input layer after the deterministic
+                    system has been validated through real use.
                 </p>
 
             </section>
@@ -278,3 +295,4 @@
     </main>
     <script src="trajectory.js"></script>
 </body>
+</html>

@@ -33,6 +33,8 @@ const levelProgressFill = document.getElementById("level-progress-fill");
 const exportDataButton = document.getElementById("export-data-button");
 const resetDataButton = document.getElementById("reset-data-button");
 
+const CURRENT_RULESET_VERSION = 1;
+
 const dimensionXP = {
     learning: 0,
     building: 0,
@@ -46,6 +48,7 @@ let storageLoadError = "";
 function exportCareerEvents() {
     const exportData = {
         exportVersion: 1,
+        rulesetVersion: CURRENT_RULESET_VERSION,
         exportedAt: new Date().toISOString(),
         activityRules,
         events: careerEvents
@@ -185,6 +188,10 @@ function calculateXP(activityType, amount) {
     return rule.xpPerHour * amount;
 }
 
+function formatXP(xp) {
+    return Number(xp.toFixed(3));
+}
+
 function calculateDimensionAllocations(activityType, xpEarned) {
     const dimensions = activityRules[activityType].dimensions;
     const dimensionAllocations = {};
@@ -254,7 +261,7 @@ function updateDimensionBars() {
             `${percentage}%`;
 
         dimensionDisplays[dimension].xp.textContent =
-            `${dimensionXP[dimension]} XP (${percentage.toFixed(1)}%)`;
+            `${formatXP(dimensionXP[dimension])} XP (${percentage.toFixed(1)}%)`;
     }
 }
 
@@ -270,7 +277,7 @@ function updateLevelProgress(totalXP, currentLevel) {
         (xpIntoLevel / xpNeededForLevel) * 100;
 
     nextLevelText.textContent =
-        `${xpRemaining} XP to Level ${currentLevel + 1}`;
+        `${formatXP(xpRemaining)} XP to Level ${currentLevel + 1}`;
 
     levelProgressFill.style.width =
         `${percentage}%`;
@@ -289,8 +296,30 @@ function createCareerEvent(
         },
         description: activityDescription,
         source: "manual",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        rulesetVersion: CURRENT_RULESET_VERSION,
     };
+}
+
+function migrateCareerEvents() {
+    let migrationOccurred = false;
+
+    for (const careerEvent of careerEvents) {
+        if (
+            careerEvent !== null &&
+            typeof careerEvent === "object" &&
+            !Object.hasOwn(careerEvent, "rulesetVersion")
+        ) {
+            careerEvent.rulesetVersion =
+                CURRENT_RULESET_VERSION;
+
+            migrationOccurred = true;
+        }
+    }
+
+    if (migrationOccurred) {
+        saveCareerEvents();
+    }
 }
 
 function renderRecentActivity(careerEvent, xpEarned) {
@@ -299,7 +328,7 @@ function renderRecentActivity(careerEvent, xpEarned) {
     const deleteButton = document.createElement("button");
 
     activityText.textContent =
-        `${careerEvent.description} — ${careerEvent.activityType} — +${xpEarned} XP`;
+        `${careerEvent.description} — ${careerEvent.activityType} — +${formatXP(xpEarned)} XP`;
 
     deleteButton.type = "button";
     deleteButton.textContent = "Delete";
@@ -317,7 +346,7 @@ function renderRecentActivity(careerEvent, xpEarned) {
 }
 
 function updateDashboard() {
-    totalXPDisplay.textContent = totalXP;
+    totalXPDisplay.textContent = formatXP(totalXP);
 
     const currentLevel = calculateLevel(totalXP);
     const currentRank = calculateRank(currentLevel);
@@ -399,6 +428,7 @@ function isValidCareerEvent(careerEvent) {
     return (
         careerEvent !== null &&
         typeof careerEvent === "object" &&
+        careerEvent.rulesetVersion === CURRENT_RULESET_VERSION &&
         Number.isFinite(careerEvent.id) &&
         Object.hasOwn(
             activityRules,
@@ -443,6 +473,7 @@ function removeInvalidCareerEvents() {
         "Some invalid saved activities were skipped. A backup was preserved.";
 }
 
+migrateCareerEvents();
 removeInvalidCareerEvents();
 restoreCareerEvents();
 
