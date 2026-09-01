@@ -178,6 +178,24 @@ const activityRules = {
             "problem-solving": 0.2,
             creativity: 0.2,
         }
+    },
+
+    "hackathon": {
+        xpPerHour: 40,
+        dimensions: {
+            building: 0.4,
+            "problem-solving": 0.4,
+            creativity: 0.2
+        }
+    },
+
+    "research": {
+        xpPerHour: 35,
+        dimensions: {
+            learning: 0.6,
+            "problem-solving": 0.3,
+            creativity: 0.1
+        }
     }
 };
 
