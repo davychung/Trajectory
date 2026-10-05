@@ -26,7 +26,7 @@
     </nav>
 
     <header class="app-header">
-        <p class="app-eyebrow">PILOT BUILD</p>
+        <p class="app-eyebrow">TRAJECTORY · V0.2</p>
 
         <h1>Trajectory</h1>
 
@@ -41,24 +41,23 @@
             <h2>Log Activity</h2>
 
             <aside class="pilot-note" aria-labelledby="pilot-note-title">
-                <p class="pilot-label">Pilot Build</p>
+                <p class="pilot-label">Trajectory v0.2</p>
 
                 <h3 id="pilot-note-title">Log one real activity</h3>
 
                 <p>
-                    Choose what you worked on, enter the time spent and briefly
-                    describe the work. Trajectory will translate it into XP and
-                    growth dimensions using an experimental ruleset.
+                    Log what you worked on. Trajectory uses your activity history
+                    to identify patterns in how your career development changes over time.
                 </p>
 
                 <p class="pilot-storage-note">
-                    Your activities are saved only in this browser. Export your
-                    data before clearing browser storage or moving to another device.
+                    Your activities are currently saved only in this browser.
+                    Export your data before clearing browser storage or moving to another device.
                 </p>
             </aside>
 
             <form id="activity-form">
-                <div class="form-grid">
+                <div class="form-grid" id="form-grid">
                     <div class="form-field">
                         <label for="activity-type">Activity Type</label>
                         <select id="activity-type" required>
@@ -67,7 +66,17 @@
                             <option value="project-work">Project Work</option>
                             <option value="hackathon">Hackathon</option>
                             <option value="research">Research</option>
+                            <option value="other">Other</option>
                         </select>
+                    </div>
+
+                    <div class="form-field" id="custom-type-field" hidden>
+                        <label for="custom-activity-type">Custom Activity Type</label>
+                        <input
+                            type="text"
+                            id="custom-activity-type"
+                            placeholder="e.g. Portfolio Work"
+                        >
                     </div>
 
                     <div class="form-field">
@@ -96,85 +105,27 @@
 
                 <button type="submit">Add Activity</button>
                 <p id="form-message" role="status"></p>
-
-                <div id="xp-result">
-                    <p>Total XP: <span id="total-xp">0</span></p>
-                </div>
             </form>
 
-            <p>Level: <span id="level">1</span></p>
+            <section class="trajectory-summary">
+                <p class="summary-label">Current Evidence</p>
 
-            <div class="level-progress">
-                <p id="next-level-text">0 XP to next level</p>
+                <div class="summary-stats">
+                    <div class="summary-stat">
+                        <span id="activity-count">0</span>
+                        <span>activities</span>
+                    </div>
 
-                <div class="progress-bar">
-                    <div class="progress-fill" id="level-progress-fill"></div>
+                    <div class="summary-stat">
+                        <span id="total-hours">0</span>
+                        <span>hours logged</span>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="distribution-header">
-                <h3>XP Distribution</h3>
 
-                <p>
-                    Your share of total XP across each growth dimension.
-                    Percentages change as your activity mix changes.
+                <p id="trajectory-signal">
+                    Start logging activity to build your trajectory.
                 </p>
-            </div>
-
-            <div class="dimension-row">
-                <div class="dimension-label">
-                    <span>Building</span>
-                    <span id="building-xp">0 XP</span>
-                </div>
-
-                <div class="dimension-bar">
-                    <div class="dimension-fill" id="building-fill"></div>
-                </div>
-            </div>
-
-            <div class="dimension-row">
-                <div class="dimension-label">
-                    <span>Problem Solving</span>
-                    <span id="problem-solving-xp">0 XP</span>
-                </div>
-
-                <div class="dimension-bar">
-                    <div class="dimension-fill" id="problem-solving-fill"></div>
-                </div>
-            </div>
-
-            <div class="dimension-row">
-                <div class="dimension-label">
-                    <span>Learning</span>
-                    <span id="learning-xp">0 XP</span>
-                </div>
-
-                <div class="dimension-bar">
-                    <div class="dimension-fill" id="learning-fill"></div>
-                </div>
-            </div>
-            
-            <div class="dimension-row">
-                <div class="dimension-label">
-                    <span>Career</span>
-                    <span id="career-xp">0 XP</span>
-                </div>
-
-                <div class="dimension-bar">
-                    <div class="dimension-fill" id="career-fill"></div>
-                </div>
-            </div>
-            
-            <div class="dimension-row">
-                <div class="dimension-label">
-                    <span>Creativity</span>
-                    <span id="creativity-xp">0 XP</span>
-                </div>
-
-                <div class="dimension-bar">
-                    <div class="dimension-fill" id="creativity-fill"></div>
-                </div>
-            </div>
+            </section>
 
 
             <div class="activity-history">

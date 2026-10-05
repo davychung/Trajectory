@@ -1,39 +1,41 @@
 let totalXP = 0;
 
-const dimensionDisplays = {
-    "problem-solving": {
-        xp: document.getElementById("problem-solving-xp"),
-        fill: document.getElementById("problem-solving-fill")
-    },
-
-    building: {
-        xp: document.getElementById("building-xp"),
-        fill: document.getElementById("building-fill")
-    },
-
-    learning: {
-        xp: document.getElementById("learning-xp"),
-        fill: document.getElementById("learning-fill")
-    },
-
-    career: {
-        xp: document.getElementById("career-xp"),
-        fill: document.getElementById("career-fill")
-    },
-
-    creativity: {
-        xp: document.getElementById("creativity-xp"),
-        fill: document.getElementById("creativity-fill")
-    }
-};
-
-const nextLevelText = document.getElementById("next-level-text");
-const levelProgressFill = document.getElementById("level-progress-fill");
+const activityCountDisplay = document.getElementById("activity-count");
+const totalHoursDisplay = document.getElementById("total-hours");
+const trajectorySignal = document.getElementById("trajectory-signal");
 
 const exportDataButton = document.getElementById("export-data-button");
 const resetDataButton = document.getElementById("reset-data-button");
+const formGrid = document.getElementById("form-grid");
+
+const activityTypeInput =
+    document.getElementById("activity-type");
+
+const customTypeField =
+    document.getElementById("custom-type-field");
+
+const customActivityTypeInput =
+    document.getElementById("custom-activity-type");
+
+activityTypeInput.addEventListener("change", function() {
+    const isOther = activityTypeInput.value === "other";
+
+    customTypeField.hidden = !isOther;
+    customActivityTypeInput.required = isOther;
+
+    formGrid.classList.toggle("has-custom-type", isOther);
+
+    if (!isOther) {
+        customActivityTypeInput.value = "";
+    }
+});
 
 const CURRENT_RULESET_VERSION = 1;
+
+const VALID_EVENT_SOURCES = new Set([
+    "manual",
+    "import"
+]);
 
 const dimensionXP = {
     learning: 0,
@@ -143,11 +145,7 @@ const careerEvents = loadCareerEvents();
 
 const activityList = document.getElementById("activity-list");
 
-const totalXPDisplay = document.getElementById("total-xp");
-
 const activityForm = document.getElementById("activity-form");
-
-const levelDisplay = document.getElementById("level");
 
 const formMessage = document.getElementById("form-message");
 
@@ -196,6 +194,11 @@ const activityRules = {
             "problem-solving": 0.3,
             creativity: 0.1
         }
+    },
+
+    other: {
+        xpPerHour: 0,
+        dimensions: {}
     }
 };
 
@@ -250,65 +253,16 @@ function applyEvaluationToState(evaluation) {
     }
 }
 
-function calculateLevel(totalXP) {
-    return Math.floor(Math.sqrt(totalXP / 100)) + 1;
-}
-
-function calculateRank(level) {
-    if (level <= 5) {
-        return "Student";
-    } else if (level <= 10) {
-        return "Intern";
-    } else if (level <= 20) {
-        return "Junior";
-    } else if (level <= 35) {
-        return "Mid";
-    } else {
-        return "Senior";
-    }
-}
-
-function updateDimensionBars() {
-    for (const dimension in dimensionXP) {
-        const percentage =
-            totalXP === 0
-                ? 0
-                : (dimensionXP[dimension] / totalXP) * 100;
-
-        dimensionDisplays[dimension].fill.style.width =
-            `${percentage}%`;
-
-        dimensionDisplays[dimension].xp.textContent =
-            `${formatXP(dimensionXP[dimension])} XP (${percentage.toFixed(1)}%)`;
-    }
-}
-
-function updateLevelProgress(totalXP, currentLevel) {
-    const currentLevelXP = Math.pow(currentLevel - 1, 2) * 100;
-    const nextLevelXP = Math.pow(currentLevel, 2) * 100;
-
-    const xpIntoLevel = totalXP - currentLevelXP;
-    const xpNeededForLevel = nextLevelXP - currentLevelXP;
-    const xpRemaining = nextLevelXP - totalXP;
-
-    const percentage =
-        (xpIntoLevel / xpNeededForLevel) * 100;
-
-    nextLevelText.textContent =
-        `${formatXP(xpRemaining)} XP to Level ${currentLevel + 1}`;
-
-    levelProgressFill.style.width =
-        `${percentage}%`;
-}
-
 function createCareerEvent(
     activityType,
     amount,
-    activityDescription
+    activityDescription,
+    activityLabel = null
 ) {
     return {
         id: Date.now(),
         activityType,
+        activityLabel,
         measurements: {
             hours: amount
         },
@@ -340,13 +294,24 @@ function migrateCareerEvents() {
     }
 }
 
-function renderRecentActivity(careerEvent, xpEarned) {
+function getActivityLabel(careerEvent) {
+    if (
+        careerEvent.activityType === "other" &&
+        careerEvent.activityLabel
+    ) {
+        return careerEvent.activityLabel;
+    }
+
+    return formatDimensionName(careerEvent.activityType);
+}
+
+function renderRecentActivity(careerEvent) {
     const activityItem = document.createElement("li");
     const activityText = document.createElement("span");
     const deleteButton = document.createElement("button");
 
     activityText.textContent =
-        `${careerEvent.description} — ${careerEvent.activityType} — +${formatXP(xpEarned)} XP`;
+    `${careerEvent.description} — ${getActivityLabel(careerEvent)} — ${careerEvent.measurements.hours}h`;
 
     deleteButton.type = "button";
     deleteButton.textContent = "Delete";
@@ -363,17 +328,50 @@ function renderRecentActivity(careerEvent, xpEarned) {
     activityList.prepend(activityItem);
 }
 
+function formatDimensionName(dimension) {
+    return dimension
+        .split("-")
+        .map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        )
+        .join(" ");
+}
+
 function updateDashboard() {
-    totalXPDisplay.textContent = formatXP(totalXP);
+    const activityCount = careerEvents.length;
 
-    const currentLevel = calculateLevel(totalXP);
-    const currentRank = calculateRank(currentLevel);
+    const totalHours = careerEvents.reduce(
+        (sum, careerEvent) =>
+            sum + careerEvent.measurements.hours,
+        0
+    );
 
-    levelDisplay.textContent =
-        `${currentLevel} (${currentRank})`;
+    activityCountDisplay.textContent = activityCount;
+    totalHoursDisplay.textContent = Number(totalHours.toFixed(2));
 
-    updateLevelProgress(totalXP, currentLevel);
-    updateDimensionBars();
+    if (activityCount === 0) {
+        trajectorySignal.textContent =
+            "Start logging activity to build your trajectory.";
+        return;
+    }
+
+    const hoursByActivityType = {};
+
+    for (const careerEvent of careerEvents) {
+        const activityType = getActivityLabel(careerEvent);
+        const hours = careerEvent.measurements.hours;
+
+        hoursByActivityType[activityType] =
+            (hoursByActivityType[activityType] || 0) + hours;
+    }
+
+    const mostActiveActivity = Object.entries(hoursByActivityType)
+        .reduce((highest, current) =>
+            current[1] > highest[1] ? current : highest
+        );
+
+    trajectorySignal.textContent =
+        `Most time spent: ${formatDimensionName(mostActiveActivity[0])} (${mostActiveActivity[1]}h).`;
 }
 
 function resetDerivedState() {
@@ -400,12 +398,7 @@ function restoreCareerEvents() {
     const recentEvents = [...careerEvents].reverse();
 
     for (const careerEvent of recentEvents) {
-        const evaluation = evaluateCareerEvent(careerEvent);
-
-        renderRecentActivity(
-            careerEvent,
-            evaluation.xpEarned
-        );
+        renderRecentActivity(careerEvent);
     }
 }
 
@@ -461,7 +454,16 @@ function isValidCareerEvent(careerEvent) {
         careerEvent.measurements.hours <= 24 &&
         typeof careerEvent.description === "string" &&
         careerEvent.description.trim().length > 0 &&
-        careerEvent.source === "manual" &&
+
+        (
+            careerEvent.activityType !== "other" ||
+            (
+                typeof careerEvent.activityLabel === "string" &&
+                careerEvent.activityLabel.trim().length > 0
+            )
+        ) &&
+
+        VALID_EVENT_SOURCES.has(careerEvent.source) &&
         typeof careerEvent.timestamp === "string" &&
         !Number.isNaN(
             Date.parse(careerEvent.timestamp)
@@ -491,6 +493,7 @@ function removeInvalidCareerEvents() {
         "Some invalid saved activities were skipped. A backup was preserved.";
 }
 
+
 migrateCareerEvents();
 removeInvalidCareerEvents();
 restoreCareerEvents();
@@ -499,6 +502,9 @@ activityForm.addEventListener("submit", function(event) {
     event.preventDefault();
 
     const activityType = document.getElementById("activity-type").value;
+    
+    const customActivityType =
+    customActivityTypeInput.value.trim();
 
     const activityAmount = document.getElementById("activity-amount").value;
 
@@ -511,6 +517,15 @@ activityForm.addEventListener("submit", function(event) {
     if (!Object.hasOwn(activityRules, activityType)) {
         formMessage.textContent =
             "Please select a valid activity type.";
+        return;
+    }
+
+    if (
+        activityType === "other" &&
+        customActivityType.length === 0
+    ) {
+        formMessage.textContent =
+            "Please enter a custom activity type.";
         return;
     }
 
@@ -530,10 +545,13 @@ activityForm.addEventListener("submit", function(event) {
         return;
     }
 
-    const careerEvent = createCareerEvent(
-    activityType,
-    amount,
-    activityDescription
+   const careerEvent = createCareerEvent(
+        activityType,
+        amount,
+        activityDescription,
+        activityType === "other"
+            ? customActivityType
+            : null
     );
 
     const evaluation = evaluateCareerEvent(careerEvent);
@@ -551,13 +569,14 @@ activityForm.addEventListener("submit", function(event) {
 
     updateDashboard();
 
-    renderRecentActivity(
-    careerEvent,
-    evaluation.xpEarned
-    );
+    renderRecentActivity(careerEvent);
 
     formMessage.textContent = "Activity added.";
     activityForm.reset();
+
+    customTypeField.hidden = true;
+    customActivityTypeInput.required = false;
+    formGrid.classList.remove("has-custom-type");
 
     console.log("Type:", activityType);
     console.log("Amount:", activityAmount);
