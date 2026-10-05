@@ -498,6 +498,26 @@ migrateCareerEvents();
 removeInvalidCareerEvents();
 restoreCareerEvents();
 
+function addCareerEvent(careerEvent) {
+    if (!isValidCareerEvent(careerEvent)) {
+        throw new Error("Invalid Career Event.");
+    }
+
+    careerEvents.unshift(careerEvent);
+
+    saveCareerEvents();
+    restoreCareerEvents();
+}
+
+function importCareerEvent(importedEvent) {
+    const careerEvent = {
+        ...importedEvent,
+        source: "import"
+    };
+
+    addCareerEvent(careerEvent);
+}
+
 activityForm.addEventListener("submit", function(event) {
     event.preventDefault();
 
@@ -554,22 +574,7 @@ activityForm.addEventListener("submit", function(event) {
             : null
     );
 
-    const evaluation = evaluateCareerEvent(careerEvent);
-
-    applyEvaluationToState(evaluation);
-    
-    careerEvents.unshift(careerEvent);
-
-    saveCareerEvents();
-
-    console.log("Career Event:", careerEvent);
-    console.log("All Career Events:", careerEvents);
-
-    console.log(dimensionXP);
-
-    updateDashboard();
-
-    renderRecentActivity(careerEvent);
+    addCareerEvent(careerEvent);
 
     formMessage.textContent = "Activity added.";
     activityForm.reset();
