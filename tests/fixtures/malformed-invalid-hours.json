@@ -1,0 +1,62 @@
+{
+  "exportVersion": 1,
+  "rulesetVersion": 1,
+  "exportedAt": "2026-10-17T16:23:08.066Z",
+  "activityRules": {
+    "learning": {
+      "xpPerHour": 20,
+      "dimensions": {
+        "learning": 1
+      }
+    },
+    "leetcode": {
+      "xpPerHour": 25,
+      "dimensions": {
+        "problem-solving": 0.7,
+        "learning": 0.3
+      }
+    },
+    "project-work": {
+      "xpPerHour": 30,
+      "dimensions": {
+        "building": 0.6,
+        "problem-solving": 0.2,
+        "creativity": 0.2
+      }
+    },
+    "hackathon": {
+      "xpPerHour": 40,
+      "dimensions": {
+        "building": 0.4,
+        "problem-solving": 0.4,
+        "creativity": 0.2
+      }
+    },
+    "research": {
+      "xpPerHour": 35,
+      "dimensions": {
+        "learning": 0.6,
+        "problem-solving": 0.3,
+        "creativity": 0.1
+      }
+    },
+    "other": {
+      "xpPerHour": 0,
+      "dimensions": {}
+    }
+  },
+  "events": [
+    {
+      "id": 1791225492059,
+      "activityType": "project-work",
+      "activityLabel": null,
+      "measurements": {
+        "hours": -1
+      },
+      "description": "MANUAL ACCEPTANCE FIXTURE: invalid hours; reject entire import",
+      "timestamp": "2026-10-05T13:04:53.058Z",
+      "rulesetVersion": 1,
+      "source": "import"
+    }
+  ]
+}

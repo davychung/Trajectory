@@ -134,6 +134,11 @@
             </div>
 
             <div class="data-controls">
+                <div class="import-picker">
+                    <label for="import-file">Import Data</label>
+                    <input type="file" id="import-file" accept=".json,application/json" aria-describedby="import-file-hint">
+                    <p id="import-file-hint">Choose a Trajectory JSON export. Review before merging.</p>
+                </div>
                 <button type="button" id="export-data-button">
                     Export Data
                 </button>
@@ -141,10 +146,34 @@
                 <button type="button" id="reset-data-button">
                     Reset Data
                 </button>
+                <button type="button" id="recovery-data-button" hidden>Download Recovery Data</button>
             </div>
+
+            <section id="import-preview" aria-labelledby="import-preview-title" hidden>
+                <div class="import-preview-heading">
+                    <h3 id="import-preview-title">Review Import</h3>
+                    <span id="import-state" class="import-state">Ready to review</span>
+                </div>
+                <p id="import-summary" role="status"></p>
+                <div id="import-details">
+                    <dl class="import-counts">
+                        <div><dt>New events</dt><dd id="import-new-count">0</dd></div>
+                        <div><dt>Identical duplicates</dt><dd id="import-duplicate-count">0</dd></div>
+                        <div><dt>Unsupported records</dt><dd id="import-unsupported-count">0</dd></div>
+                    </dl>
+                    <p id="import-metadata" class="import-caption"></p>
+                    <p class="import-caption">Existing events will be kept. Identical duplicates are skipped. Unsupported records are preserved without evaluation.</p>
+                    <p class="import-caption">Keep the original file for its rules snapshot; imported export metadata is not saved.</p>
+                </div>
+                <div class="import-actions">
+                    <button type="button" id="confirm-import-button">Confirm Merge</button>
+                    <button type="button" id="cancel-import-button">Cancel</button>
+                </div>
+            </section>
 
         </section>
     </main>
+    <script src="trajectory-data.js"></script>
     <script src="trajectory.js"></script>
 </body>
 </html>

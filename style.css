@@ -810,3 +810,205 @@ Padding -> Space inside
 Border  -> Outline
 Margin -> Space outside
 */
+
+#import-preview {
+    margin: 24px 0 0;
+    padding: 24px;
+    border: 1px solid var(--metal-dark);
+    border-radius: 3px;
+    background: var(--surface);
+    overflow-wrap: anywhere;
+    font-size: var(--text-sm);
+}
+
+#import-preview button {
+    min-height: 44px;
+    padding: 10px 18px;
+    border: 1px solid var(--metal-dark);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+#import-file {
+    display: block;
+    width: 100%;
+    max-width: 440px;
+    min-height: 44px;
+    padding: 4px;
+    border: 1px solid var(--metal-dark);
+    border-radius: 3px;
+    background: var(--background);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+/* Retain the native file input's keyboard and screen-reader behavior. */
+#import-file::file-selector-button {
+    min-height: 36px;
+    margin-right: 12px;
+    padding: 8px 14px;
+    border: 1px solid var(--surface-raised);
+    border-radius: 2px;
+    background: var(--surface-raised);
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#import-file:hover::file-selector-button {
+    background: var(--metal-dark);
+    color: var(--background);
+}
+
+.data-controls {
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.import-picker {
+    flex: 1 1 320px;
+    min-width: 0;
+}
+
+.import-picker label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 600;
+}
+
+#import-file-hint {
+    margin: 8px 0 0;
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
+}
+
+.import-preview-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+#import-preview-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.import-state {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    font-size: var(--text-xs);
+    font-weight: 500;
+}
+
+#import-preview.import-preview--ready .import-state { color: var(--success); }
+#import-preview.import-preview--blocked { border-color: var(--warning); }
+#import-preview.import-preview--blocked .import-state { color: var(--warning); }
+#import-preview.import-preview--error { border-color: #FCA5A5; }
+#import-preview.import-preview--error .import-state { color: #FCA5A5; }
+
+#import-summary {
+    margin: 16px 0 0;
+    color: var(--text);
+    scroll-margin-block: 24px;
+}
+
+.import-counts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 24px 0 20px;
+}
+
+.import-counts > div {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 6px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--surface-raised);
+    border-radius: 2px;
+}
+
+.import-counts dt { color: var(--text-secondary); font-size: var(--text-xs); }
+.import-counts dd {
+    margin: 0;
+    color: var(--text);
+    font-size: 1.6rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+
+#import-preview .import-caption {
+    margin: 8px 0;
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
+}
+
+.import-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--surface-raised);
+}
+
+#import-preview #confirm-import-button {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--background);
+}
+
+#import-preview button:hover:not(:disabled) {
+    border-color: var(--text);
+    background: var(--surface-raised);
+}
+
+#import-preview #confirm-import-button:hover:not(:disabled) { background: var(--primary-hover); }
+
+#import-preview button:disabled,
+#import-preview #confirm-import-button:disabled {
+    border-color: var(--surface-raised);
+    background: var(--surface-raised);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+
+#import-file:focus-visible,
+#import-preview button:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 4px;
+}
+
+@media (max-width: 768px) {
+    .import-picker { flex: 0 1 auto; width: 100%; }
+    #import-file { max-width: none; }
+    #import-preview { padding: 18px; }
+    .import-preview-heading { align-items: flex-start; flex-direction: column; }
+    .import-counts { grid-template-columns: 1fr; gap: 8px; }
+    .import-counts > div {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px;
+    }
+    .import-counts dd { font-size: 1.3rem; }
+    .import-actions { flex-direction: column; }
+    .import-actions button { width: 100%; }
+}

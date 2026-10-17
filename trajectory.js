@@ -32,10 +32,7 @@ activityTypeInput.addEventListener("change", function() {
 
 const CURRENT_RULESET_VERSION = 1;
 
-const VALID_EVENT_SOURCES = new Set([
-    "manual",
-    "import"
-]);
+const data = TrajectoryData;
 
 const dimensionXP = {
     learning: 0,
@@ -46,15 +43,18 @@ const dimensionXP = {
 };
 
 let storageLoadError = "";
+let storageSnapshot = null;
+let recoveryRaw = null;
+let pendingImport = null;
+let importSelection = 0;
+let careerEvents = [];
 
 function exportCareerEvents() {
-    const exportData = {
-        exportVersion: 1,
-        rulesetVersion: CURRENT_RULESET_VERSION,
-        exportedAt: new Date().toISOString(),
-        activityRules,
-        events: careerEvents
-    };
+    if (storageLoadError) {
+        downloadRecoveryData();
+        return;
+    }
+    const exportData = data.buildTrajectoryExport(careerEvents, activityRules, CURRENT_RULESET_VERSION);
 
     const fileContents =
         JSON.stringify(exportData, null, 2);
@@ -96,62 +96,32 @@ function resetCareerEvents() {
         return;
     }
 
-    careerEvents.length = 0;
-
-    saveCareerEvents();
-    restoreCareerEvents();
-
-    formMessage.textContent =
-        "Trajectory data reset.";
+    return saveCareerEvents([], "Trajectory data reset.");
 }
 
 function loadCareerEvents() {
-    const storedCareerEvents =
-        localStorage.getItem("trajectoryEvents");
-
-    if (!storedCareerEvents) {
-        return [];
-    }
-
+    let result;
     try {
-        const parsedEvents = JSON.parse(storedCareerEvents);
-
-        if (!Array.isArray(parsedEvents)) {
-            throw new Error(
-                "Stored Career Events must be an array."
-            );
-        }
-
-        return parsedEvents;
+        result = data.readStoredEvents(window.localStorage, activityRules, CURRENT_RULESET_VERSION);
     } catch (error) {
-        console.error(
-            "Could not load Trajectory events:",
-            error
-        );
-
-        localStorage.setItem(
-            "trajectoryEventsBackup",
-            storedCareerEvents
-        );
-
-        storageLoadError =
-            "Saved activity data could not be loaded. A backup was preserved.";
-
+        result = { ok: false, raw: null, error };
+    }
+    recoveryRaw = result.raw;
+    if (!result.ok) {
+        storageLoadError = "Saved history could not be read safely. Changes are blocked. Download recovery data if available, then repair storage and reload.";
+        formMessage.textContent = storageLoadError;
+        document.getElementById("recovery-data-button").hidden = result.raw === null;
         return [];
     }
+    storageSnapshot = result.raw;
+    return result.events;
 }
-
-const careerEvents = loadCareerEvents();
 
 const activityList = document.getElementById("activity-list");
 
 const activityForm = document.getElementById("activity-form");
 
 const formMessage = document.getElementById("form-message");
-
-if (storageLoadError) {
-    formMessage.textContent = storageLoadError;
-}
 
 const activityRules = {
     learning: {
@@ -273,27 +243,6 @@ function createCareerEvent(
     };
 }
 
-function migrateCareerEvents() {
-    let migrationOccurred = false;
-
-    for (const careerEvent of careerEvents) {
-        if (
-            careerEvent !== null &&
-            typeof careerEvent === "object" &&
-            !Object.hasOwn(careerEvent, "rulesetVersion")
-        ) {
-            careerEvent.rulesetVersion =
-                CURRENT_RULESET_VERSION;
-
-            migrationOccurred = true;
-        }
-    }
-
-    if (migrationOccurred) {
-        saveCareerEvents();
-    }
-}
-
 function getActivityLabel(careerEvent) {
     if (
         careerEvent.activityType === "other" &&
@@ -312,6 +261,10 @@ function renderRecentActivity(careerEvent) {
 
     activityText.textContent =
     `${careerEvent.description} — ${getActivityLabel(careerEvent)} — ${careerEvent.measurements.hours}h`;
+    const classification = data.classifyCareerEvent(careerEvent, activityRules, CURRENT_RULESET_VERSION);
+    if (classification.category === "unsupported") {
+        activityText.textContent += ` — Evaluation unavailable: ${classification.reason}`;
+    }
 
     deleteButton.type = "button";
     deleteButton.textContent = "Delete";
@@ -355,7 +308,7 @@ function updateDashboard() {
         return;
     }
 
-    const hoursByActivityType = {};
+    const hoursByActivityType = Object.create(null);
 
     for (const careerEvent of careerEvents) {
         const activityType = getActivityLabel(careerEvent);
@@ -388,6 +341,7 @@ function restoreCareerEvents() {
     resetDerivedState();
 
     for (const careerEvent of careerEvents) {
+        if (!data.isEvaluableCareerEvent(careerEvent, activityRules, CURRENT_RULESET_VERSION)) continue;
         const evaluation = evaluateCareerEvent(careerEvent);
 
         applyEvaluationToState(evaluation);
@@ -402,11 +356,39 @@ function restoreCareerEvents() {
     }
 }
 
-function saveCareerEvents() {
-    localStorage.setItem(
-        "trajectoryEvents",
-        JSON.stringify(careerEvents)
-    );
+function saveCareerEvents(candidate, successMessage, isImport = false) {
+    if (storageLoadError) {
+        formMessage.textContent = storageLoadError;
+        if (isImport) showImportError(storageLoadError, { title: "Import not saved", status: "Recovery required" });
+        return false;
+    }
+    let result;
+    try {
+        result = data.persistCandidateEvents(window.localStorage, candidate, storageSnapshot);
+    } catch (error) {
+        result = { ok: false, error };
+    }
+    if (!result.ok) {
+        formMessage.textContent = result.changed
+            ? "Saved history changed in another tab. Nothing was saved. Reload before making changes."
+            : "Could not save history. Nothing was changed. Storage may be full or blocked; you can retry.";
+        if (isImport) showImportError(formMessage.textContent, {
+            title: "Import not saved", status: result.changed ? "History changed" : "Save failed", retry: !result.changed
+        });
+        return false;
+    }
+    // Persistence is complete. Rendering failures must never be described as a rollback.
+    storageSnapshot = result.raw;
+    careerEvents = candidate;
+    pendingImport = null;
+    try {
+        document.getElementById("import-preview").hidden = true;
+        restoreCareerEvents();
+        formMessage.textContent = successMessage;
+    } catch (error) {
+        formMessage.textContent = "History was saved, but the display could not update. Reload to recover the saved history, or export it now.";
+    }
+    return true;
 }
 
 function deleteCareerEvent(eventId) {
@@ -427,95 +409,148 @@ function deleteCareerEvent(eventId) {
         return;
     }
 
-    careerEvents.splice(eventIndex, 1);
+    return saveCareerEvents(careerEvents.filter((_, index) => index !== eventIndex), "Activity deleted.");
+}
 
-    saveCareerEvents();
+function isValidCareerEvent(event) {
+    return data.classifyCareerEvent(event, activityRules, CURRENT_RULESET_VERSION).category !== "malformed";
+}
+
+careerEvents = loadCareerEvents();
+try {
     restoreCareerEvents();
-
-    formMessage.textContent = "Activity deleted.";
+} catch (error) {
+    formMessage.textContent = "Saved history remains in storage, but the display failed. Reload or export your data.";
 }
 
-function isValidCareerEvent(careerEvent) {
-    return (
-        careerEvent !== null &&
-        typeof careerEvent === "object" &&
-        careerEvent.rulesetVersion === CURRENT_RULESET_VERSION &&
-        Number.isFinite(careerEvent.id) &&
-        Object.hasOwn(
-            activityRules,
-            careerEvent.activityType
-        ) &&
-        careerEvent.measurements !== null &&
-        typeof careerEvent.measurements === "object" &&
-        Number.isFinite(
-            careerEvent.measurements.hours
-        ) &&
-        careerEvent.measurements.hours >= 0.25 &&
-        careerEvent.measurements.hours <= 24 &&
-        typeof careerEvent.description === "string" &&
-        careerEvent.description.trim().length > 0 &&
-
-        (
-            careerEvent.activityType !== "other" ||
-            (
-                typeof careerEvent.activityLabel === "string" &&
-                careerEvent.activityLabel.trim().length > 0
-            )
-        ) &&
-
-        VALID_EVENT_SOURCES.has(careerEvent.source) &&
-        typeof careerEvent.timestamp === "string" &&
-        !Number.isNaN(
-            Date.parse(careerEvent.timestamp)
-        )
-    );
+function addCareerEvent(event) {
+    if (!isValidCareerEvent(event)) {
+        formMessage.textContent = "Invalid Career Event.";
+        return false;
+    }
+    if (careerEvents.some(existing => existing.id === event.id)) {
+        formMessage.textContent = "An activity with this ID already exists. Please try again.";
+        return false;
+    }
+    return saveCareerEvents([event, ...careerEvents], "Activity added.");
 }
 
-function removeInvalidCareerEvents() {
-    const validEvents =
-        careerEvents.filter(isValidCareerEvent);
-
-    if (validEvents.length === careerEvents.length) {
+async function handleImportFile() {
+    const selection = ++importSelection;
+    pendingImport = null;
+    document.getElementById("import-preview").hidden = true;
+    const input = document.getElementById("import-file");
+    const file = input.files[0];
+    // Keep the File reference, but allow the same path to trigger change next time.
+    input.value = "";
+    if (storageLoadError) {
+        showImportError(storageLoadError, { title: "Import unavailable", status: "Recovery required" });
         return;
     }
-
-    localStorage.setItem(
-        "trajectoryEventsBackup",
-        JSON.stringify(careerEvents)
-    );
-
-    careerEvents.length = 0;
-    careerEvents.push(...validEvents);
-
-    saveCareerEvents();
-
-    formMessage.textContent =
-        "Some invalid saved activities were skipped. A backup was preserved.";
-}
-
-
-migrateCareerEvents();
-removeInvalidCareerEvents();
-restoreCareerEvents();
-
-function addCareerEvent(careerEvent) {
-    if (!isValidCareerEvent(careerEvent)) {
-        throw new Error("Invalid Career Event.");
+    if (!file) return;
+    try {
+        const contents = await file.text();
+        if (selection !== importSelection) return;
+        const imported = data.parseTrajectoryExport(contents, activityRules, CURRENT_RULESET_VERSION);
+        renderImportPreview(imported);
+    } catch (error) {
+        if (selection !== importSelection) return;
+        const message = `Import rejected: ${error.message} Existing history is unchanged.`;
+        showImportError(message);
     }
-
-    careerEvents.unshift(careerEvent);
-
-    saveCareerEvents();
-    restoreCareerEvents();
 }
 
-function importCareerEvent(importedEvent) {
-    const careerEvent = {
-        ...importedEvent,
-        source: "import"
-    };
+function showImportError(message, { title = "Import rejected", status = "Validation error", retry = false } = {}) {
+    if (!retry) pendingImport = null;
+    formMessage.textContent = message;
+    const summary = document.getElementById("import-summary");
+    summary.textContent = message;
+    document.getElementById("import-preview").className = "import-preview--error";
+    document.getElementById("import-preview-title").textContent = title;
+    document.getElementById("import-state").textContent = status;
+    document.getElementById("import-details").hidden = !retry;
+    document.getElementById("confirm-import-button").disabled = !retry;
+    document.getElementById("import-preview").hidden = false;
+    summary.scrollIntoView({ block: "nearest" });
+}
 
-    addCareerEvent(careerEvent);
+function renderImportPreview(imported) {
+    const merge = data.prepareEventMerge(careerEvents, imported.events, activityRules, CURRENT_RULESET_VERSION);
+    pendingImport = { imported, merge, snapshot: storageSnapshot };
+    const conflictText = merge.conflicts.length ? ` Conflicting IDs: ${merge.conflicts.join(", ")}. Import blocked.` : "";
+    const blocked = merge.conflicts.length > 0;
+    document.getElementById("import-preview").className = blocked ? "import-preview--blocked" : "import-preview--ready";
+    document.getElementById("import-preview-title").textContent = blocked ? "Resolve conflicts before importing" : "Review Import";
+    document.getElementById("import-state").textContent = blocked ? "Import blocked" : merge.added ? "Ready to merge" : "Already up to date";
+    document.getElementById("import-details").hidden = false;
+    document.getElementById("import-new-count").textContent = merge.added;
+    document.getElementById("import-duplicate-count").textContent = merge.duplicates;
+    document.getElementById("import-unsupported-count").textContent = merge.unsupported;
+    document.getElementById("import-metadata").textContent =
+        `Exported ${imported.exportedAt} · Export version ${imported.exportVersion} · Ruleset ${imported.rulesetVersion}`;
+    document.getElementById("import-summary").textContent =
+        blocked ? `No events will be imported until conflicting IDs are resolved.${conflictText}` :
+        merge.added ? "Review the counts below, then confirm to merge into your history." :
+        "All events are already present. No changes are needed.";
+    document.getElementById("confirm-import-button").disabled = merge.conflicts.length > 0 || merge.added === 0;
+    document.getElementById("import-preview").hidden = false;
+    formMessage.textContent = merge.added === 0 && !merge.conflicts.length
+        ? "All events are already present. Nothing was written." : "Review the import before confirming.";
+}
+
+function confirmImport() {
+    if (!pendingImport || pendingImport.merge.conflicts.length || !pendingImport.merge.added) return false;
+    let current;
+    try {
+        current = data.readStoredEvents(window.localStorage, activityRules, CURRENT_RULESET_VERSION);
+    } catch (error) {
+        current = { ok: false };
+    }
+    if (!current.ok) {
+        const corrupt = current.raw !== null && current.raw !== undefined;
+        const message = corrupt
+            ? "Stored history is invalid. Nothing was imported. Download recovery data, repair storage and reload."
+            : "Stored history could not be read. Nothing was imported. Restore storage access and retry, or reload.";
+        if (corrupt) {
+            recoveryRaw = current.raw;
+            storageLoadError = message;
+            document.getElementById("recovery-data-button").hidden = false;
+        }
+        showImportError(message, { title: "Import not saved", status: corrupt ? "Recovery required" : "Storage read failed", retry: !corrupt });
+        return false;
+    }
+    if (current.raw !== pendingImport.snapshot) {
+        const imported = pendingImport.imported;
+        careerEvents = current.events;
+        storageSnapshot = current.raw;
+        try {
+            restoreCareerEvents();
+            renderImportPreview(imported);
+            formMessage.textContent = "Stored history changed. Review the rebuilt preview and confirm again.";
+        } catch (error) {
+            showImportError("History changed and the display could not update. Nothing was imported. Reload.",
+                { title: "Import not saved", status: "Display error" });
+        }
+        return false;
+    }
+    return saveCareerEvents(pendingImport.merge.events, "Trajectory data imported.", true);
+}
+
+function downloadRecoveryData() {
+    if (recoveryRaw === null) {
+        formMessage.textContent = "Raw storage could not be read. Restore storage access and reload to retry recovery.";
+        return;
+    }
+    const file = new Blob([recoveryRaw], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "trajectory-recovery.txt";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    formMessage.textContent = "Raw saved history downloaded unchanged. Keep this file before repairing storage.";
 }
 
 activityForm.addEventListener("submit", function(event) {
@@ -574,9 +609,7 @@ activityForm.addEventListener("submit", function(event) {
             : null
     );
 
-    addCareerEvent(careerEvent);
-
-    formMessage.textContent = "Activity added.";
+    if (!addCareerEvent(careerEvent)) return;
     activityForm.reset();
 
     customTypeField.hidden = true;
@@ -597,3 +630,15 @@ resetDataButton.addEventListener(
     "click",
     resetCareerEvents
 );
+
+
+document.getElementById("import-file").addEventListener("change", handleImportFile);
+document.getElementById("confirm-import-button").addEventListener("click", confirmImport);
+document.getElementById("cancel-import-button").addEventListener("click", function() {
+    importSelection++;
+    pendingImport = null;
+    document.getElementById("import-preview").hidden = true;
+    document.getElementById("import-file").value = "";
+    formMessage.textContent = "Import canceled. Nothing was changed.";
+});
+document.getElementById("recovery-data-button").addEventListener("click", downloadRecoveryData);
